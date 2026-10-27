@@ -48,7 +48,7 @@ import {
   type CloudBackupDoc,
   type PosLiveSyncDoc,
 } from './firebase';
-import { PosTerminalView, type PosStepTab } from './components/PosTerminalView';
+import { PosTerminalView, TABLES, type PosStepTab } from './components/PosTerminalView';
 import { OmnichannelOrdersView } from './components/OmnichannelOrdersView';
 import { InventoryView } from './components/InventoryView';
 import { AnalyticsReportView } from './components/AnalyticsReportView';
@@ -698,6 +698,10 @@ export default function App() {
     setLastCompletedOrder(newOrder);
 
     // Automatically return to Table Selection screen immediately upon payment completion
+    const nextTable =
+      selectedChannel === 'dine_in' && TABLES.includes(selectedTable) ? selectedTable : 'Bàn 01';
+    setSelectedChannel('dine_in');
+    setSelectedTable(nextTable);
     setActiveSection('pos');
     setPosStep('tables');
 
@@ -722,6 +726,8 @@ export default function App() {
       orders: nextOrders,
       inventory: updatedInventory,
       cart: [],
+      selectedChannel: 'dine_in',
+      selectedTable: nextTable,
     });
 
     // 4. Sync to Firestore if online and authenticated

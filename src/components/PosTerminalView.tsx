@@ -448,14 +448,11 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
                       (o.status === 'preparing' || o.status === 'ready')
                   );
                   const hasActiveOrder = activeTableOrders.length > 0;
-                  const statusLabel =
-                    isSelected && pricing.itemCount > 0
-                      ? `Đang chọn (${pricing.itemCount} món)`
-                      : hasActiveOrder
-                        ? `Đang phục vụ (${activeTableOrders.length} đơn)`
-                        : isSelected
-                          ? 'Đang chọn (0 món)'
-                          : 'Bàn trống';
+                  const statusLabel = isSelected
+                    ? `Đang chọn (${pricing.itemCount} món)`
+                    : hasActiveOrder
+                      ? `Đang phục vụ (${activeTableOrders.length} đơn)`
+                      : 'Bàn trống';
 
                   return (
                     <button
@@ -922,7 +919,7 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
       </div>
 
       {/* Mobile & Tablet Floating Bottom Checkout Bar */}
-      {posStep !== 'cart' && (
+      {posStep !== 'cart' && pricing.itemCount > 0 && (
         <div className="lg:hidden fixed bottom-20 md:bottom-4 left-4 right-4 z-30 bg-stone-900 text-white rounded-2xl px-4 py-3 shadow-lg flex items-center justify-between gap-3">
           <div className="min-w-0 flex items-center gap-3">
             <div>
