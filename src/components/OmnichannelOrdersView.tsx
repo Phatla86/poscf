@@ -36,7 +36,7 @@ const CHANNEL_LABELS: Record<OrderChannel, string> = {
 const STATUS_LABELS: Record<OrderStatus, string> = {
   preparing: 'Đang pha chế',
   ready: 'Sẵn sàng trả món',
-  completed: 'Đã hoàn tất',
+  completed: 'Đã thanh toán',
   cancelled: 'Đã hủy',
 };
 
@@ -68,10 +68,10 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
       <div className="bg-white border border-stone-200 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-stone-900">
-            Điều Phối Đơn Hàng Đa Kênh & Màn Hình Pha Chế (KDS)
+            Lịch Sử Đơn Hàng & Đồng Bộ Đa Kênh
           </h1>
           <p className="text-xs text-stone-500 mt-0.5">
-            Đồng bộ thời gian thực giữa Máy tính bảng Thu ngân · Màn hình Barista · Điện thoại Quản lý
+            Quản lý đơn thanh toán tức thì · Đồng bộ thời gian thực đa thiết bị
           </p>
         </div>
 
@@ -105,8 +105,8 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
         </div>
       </div>
 
-      {/* Summary KPI Strip — 2x2 on Mobile/Tablet, 4 cols on Desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Summary KPI Strip — 2x2 on Mobile/Tablet, 3 cols on Desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="min-w-0 bg-white border border-stone-200 rounded-2xl p-3.5 sm:p-4 space-y-1">
           <div className="text-[11px] sm:text-xs text-stone-500 truncate">Tổng đơn trong ca</div>
           <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-stone-900">
@@ -117,30 +117,19 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
           </div>
         </div>
         <div className="min-w-0 bg-white border border-stone-200 rounded-2xl p-3.5 sm:p-4 space-y-1">
-          <div className="text-[11px] sm:text-xs text-amber-800 font-medium truncate">
-            Đang pha chế (Bar)
-          </div>
-          <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-amber-800">
-            {preparingCount} đơn
-          </div>
-          <div className="text-[11px] text-stone-500 truncate">TB 2 phút 40 giây / đơn</div>
-        </div>
-        <div className="min-w-0 bg-white border border-stone-200 rounded-2xl p-3.5 sm:p-4 space-y-1">
-          <div className="text-[11px] sm:text-xs text-emerald-700 font-medium truncate">
-            Sẵn sàng trả món
-          </div>
+          <div className="text-[11px] sm:text-xs text-emerald-700 font-medium truncate">Đã thanh toán</div>
           <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-emerald-700">
-            {readyCount} đơn
-          </div>
-          <div className="text-[11px] text-stone-500 truncate">Sẵn sàng giao tại quầy</div>
-        </div>
-        <div className="min-w-0 bg-white border border-stone-200 rounded-2xl p-3.5 sm:p-4 space-y-1">
-          <div className="text-[11px] sm:text-xs text-stone-500 truncate">Đã hoàn tất & Cloud</div>
-          <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-stone-900">
             {completedCount} đơn
           </div>
+          <div className="text-[11px] text-stone-500 truncate">Đã đồng bộ lên Cloud</div>
+        </div>
+        <div className="min-w-0 bg-white border border-stone-200 rounded-2xl p-3.5 sm:p-4 space-y-1 col-span-2 lg:col-span-1">
+          <div className="text-[11px] sm:text-xs text-stone-500 truncate">Hàng đợi Offline</div>
+          <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-stone-900">
+            {offlinePendingCount} đơn
+          </div>
           <div className="text-[11px] text-stone-500 truncate">
-            Hàng đợi Offline: {offlinePendingCount} đơn
+            Chờ kết nối để đẩy lên Cloud
           </div>
         </div>
       </div>
@@ -151,9 +140,8 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
           {(
             [
               { id: 'all', label: 'Tất cả' },
-              { id: 'preparing', label: 'Đang pha chế' },
-              { id: 'ready', label: 'Chờ giao' },
-              { id: 'completed', label: 'Hoàn tất' },
+              { id: 'completed', label: 'Đã thanh toán' },
+              { id: 'cancelled', label: 'Đã hủy' },
             ] as const
           ).map((tab) => (
             <button
@@ -269,6 +257,7 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Hóa đơn */}
                 <button
                   type="button"
                   onClick={() => onOpenReceipt(order)}
@@ -279,28 +268,6 @@ export const OmnichannelOrdersView: React.FC<OmnichannelOrdersViewProps> = ({
                     Hóa đơn<span className="hidden sm:inline"> / HĐĐT</span>
                   </span>
                 </button>
-
-                {order.status === 'preparing' && (
-                  <button
-                    type="button"
-                    onClick={() => onAdvanceOrderStatus(order.id, 'ready')}
-                    className="min-h-[38px] px-3 py-1.5 text-xs font-semibold text-white bg-amber-700 hover:bg-amber-800 rounded-lg flex items-center gap-1.5 transition-colors whitespace-nowrap"
-                  >
-                    <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Báo pha xong</span>
-                  </button>
-                )}
-
-                {order.status === 'ready' && (
-                  <button
-                    type="button"
-                    onClick={() => onAdvanceOrderStatus(order.id, 'completed')}
-                    className="min-h-[38px] px-3 py-1.5 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg flex items-center gap-1.5 transition-colors whitespace-nowrap"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Hoàn tất giao</span>
-                  </button>
-                )}
               </div>
             </div>
           </div>

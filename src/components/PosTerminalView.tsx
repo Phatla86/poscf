@@ -332,7 +332,7 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
           }`}
         >
           <ReceiptText className="w-3.5 h-3.5 shrink-0 hidden sm:inline" />
-          <span className="truncate">3. Phiếu ({pricing.itemCount})</span>
+          <span className="truncate">3. Thanh toán ({pricing.itemCount})</span>
         </button>
       </div>
 
@@ -421,7 +421,7 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
                     Sơ Đồ 10 Bàn Phục Vụ Tại Quán
                   </h2>
                   <p className="text-xs text-stone-500 mt-0.5">
-                    Chạm vào bàn bất kỳ để chuyển thẳng sang màn hình chọn món
+                    Chọn bàn → chọn món → thanh toán ngay (không cần báo bếp)
                   </p>
                 </div>
                 <button
@@ -447,12 +447,10 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
                       o.tableName === table &&
                       (o.status === 'preparing' || o.status === 'ready')
                   );
-                  const hasActiveOrder = activeTableOrders.length > 0;
+                  const hasActiveOrder = false; // Mô hình bán trước – thanh toán ngay: không giữ trạng thái bếp
                   const statusLabel = isSelected
                     ? `Đang chọn (${pricing.itemCount} món)`
-                    : hasActiveOrder
-                      ? `Đang phục vụ (${activeTableOrders.length} đơn)`
-                      : 'Bàn trống';
+                    : 'Bàn trống';
 
                   return (
                     <button
@@ -770,7 +768,7 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
           <div className="flex items-center justify-between border-b border-stone-200 pb-3.5">
             <div>
               <h2 className="text-base font-bold text-stone-900">
-                Phiếu Tạm Tính ({pricing.itemCount} món)
+                Phiếu Thanh Toán ({pricing.itemCount} món)
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
                 {selectedTable} · Kênh {CHANNELS.find((c) => c.id === selectedChannel)?.label}
@@ -802,10 +800,10 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
               <div className="py-10 text-center space-y-2">
                 <ShoppingBag className="w-8 h-8 text-stone-300 mx-auto" />
                 <p className="text-xs font-medium text-stone-600">
-                  Chưa có món trong phiếu thanh toán
+                  Chưa có món nào trong phiếu
                 </p>
                 <p className="text-[11px] text-stone-400">
-                  Chọn bàn và chạm vào món để thêm nhanh
+                  Chạm vào bàn → chọn món → thanh toán ngay
                 </p>
               </div>
             ) : (
@@ -895,24 +893,24 @@ export const PosTerminalView: React.FC<PosTerminalViewProps> = ({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2.5 pt-1">
-            <button
-              type="button"
-              disabled={cart.length === 0}
-              onClick={() => onOpenPaymentModal('vietqr')}
-              className="min-h-[48px] px-3 py-2.5 bg-amber-700 text-white text-xs font-semibold rounded-xl hover:bg-amber-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5 whitespace-nowrap"
-            >
-              <QrCode className="w-4 h-4 shrink-0" />
-              <span>Quét QR / Ví ĐT</span>
-            </button>
+          {/* Action Buttons – Bán trước, thanh toán ngay */}
+          <div className="flex flex-col gap-2.5 pt-1">
             <button
               type="button"
               disabled={cart.length === 0}
               onClick={() => onOpenPaymentModal('cash')}
-              className="min-h-[48px] px-3 py-2.5 bg-stone-900 text-white text-xs font-semibold rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-1.5 whitespace-nowrap"
+              className="w-full min-h-[52px] px-4 py-3 bg-stone-900 text-white text-sm font-bold rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
             >
-              <span>Thanh toán ngay</span>
+              <span>💵 Thanh toán tiền mặt</span>
+            </button>
+            <button
+              type="button"
+              disabled={cart.length === 0}
+              onClick={() => onOpenPaymentModal('vietqr')}
+              className="w-full min-h-[48px] px-4 py-2.5 bg-amber-700 text-white text-xs font-semibold rounded-xl hover:bg-amber-800 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              <QrCode className="w-4 h-4 shrink-0" />
+              <span>Quét QR / Ví điện tử</span>
             </button>
           </div>
         </div>

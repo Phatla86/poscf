@@ -673,7 +673,7 @@ export default function App() {
       tax: currentPricing.tax,
       total: currentPricing.total,
       paymentMethod: method,
-      status: 'preparing',
+      status: 'completed',
       cashierName: 'Chủ quán',
       customerName: 'Tại quầy',
       eInvoiceSent: false,
