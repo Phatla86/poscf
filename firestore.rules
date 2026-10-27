@@ -1,0 +1,254 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'phatla1456@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Validation Blueprint: Product
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+        'id', 'ownerId', 'name', 'category', 'price', 'cost', 'barcode', 'sku', 'available', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'ownerId', 'name', 'category', 'price', 'cost', 'barcode', 'sku', 'available', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+      data.ownerId == request.auth.uid &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+      data.category is string && data.category.size() <= 20 &&
+      data.category in ['coffee', 'tea', 'freeze', 'bakery', 'beans'] &&
+      data.price is number && data.price >= 0 && data.price <= 100000000 &&
+      data.cost is number && data.cost >= 0 && data.cost <= 100000000 &&
+      data.barcode is string && data.barcode.size() >= 4 && data.barcode.size() <= 32 && data.barcode.matches('^[0-9A-Z\\-]+$') &&
+      data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 32 &&
+      data.available is bool &&
+      data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 40 &&
+      data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 40;
+    }
+
+    // Validation Blueprint: InventoryItem
+    function isValidInventoryItem(data) {
+      return data.keys().hasAll([
+        'id', 'ownerId', 'name', 'sku', 'unit', 'quantity', 'minThreshold', 'costPerUnit', 'supplier', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'ownerId', 'name', 'sku', 'unit', 'quantity', 'minThreshold', 'costPerUnit', 'supplier', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+      data.ownerId == request.auth.uid &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+      data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 32 &&
+      data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 24 &&
+      data.quantity is number && data.quantity >= 0 && data.quantity <= 1000000 &&
+      data.minThreshold is number && data.minThreshold >= 0 && data.minThreshold <= 1000000 &&
+      data.costPerUnit is number && data.costPerUnit >= 0 && data.costPerUnit <= 100000000 &&
+      data.supplier is string && data.supplier.size() >= 1 && data.supplier.size() <= 120 &&
+      data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 40;
+    }
+
+    // Validation Blueprint: PosOrder
+    function isValidPosOrder(data) {
+      return data.keys().hasAll([
+        'id', 'ownerId', 'orderCode', 'channel', 'tableName', 'subtotal', 'discount', 'tax', 'total',
+        'paymentMethod', 'status', 'cashierName', 'customerName', 'itemSummary', 'itemCount', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'ownerId', 'orderCode', 'channel', 'tableName', 'subtotal', 'discount', 'tax', 'total',
+        'paymentMethod', 'status', 'cashierName', 'customerName', 'itemSummary', 'itemCount', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+      data.ownerId == request.auth.uid &&
+      data.orderCode is string && data.orderCode.size() >= 3 && data.orderCode.size() <= 32 &&
+      data.channel is string && data.channel.size() <= 20 &&
+      data.channel in ['dine_in', 'takeaway', 'grabfood', 'shopeefood', 'web'] &&
+      data.tableName is string && data.tableName.size() >= 1 && data.tableName.size() <= 40 &&
+      data.subtotal is number && data.subtotal >= 0 && data.subtotal <= 500000000 &&
+      data.discount is number && data.discount >= 0 && data.discount <= 500000000 &&
+      data.tax is number && data.tax >= 0 && data.tax <= 100000000 &&
+      data.total is number && data.total >= 0 && data.total <= 500000000 &&
+      data.paymentMethod is string && data.paymentMethod.size() <= 20 &&
+      data.paymentMethod in ['cash', 'vietqr', 'momo', 'vnpay', 'zalopay', 'card'] &&
+      data.status is string && data.status.size() <= 20 &&
+      data.status in ['preparing', 'ready', 'completed', 'cancelled'] &&
+      data.cashierName is string && data.cashierName.size() >= 1 && data.cashierName.size() <= 80 &&
+      data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 80 &&
+      data.itemSummary is string && data.itemSummary.size() >= 1 && data.itemSummary.size() <= 500 &&
+      data.itemCount is number && data.itemCount >= 1 && data.itemCount <= 500 &&
+      data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 40 &&
+      data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 40;
+    }
+
+    // Validation Blueprint: CloudBackup
+    function isValidCloudBackup(data) {
+      return data.keys().hasAll([
+        'id', 'ownerId', 'label', 'ordersCount', 'inventoryCount', 'totalRevenue', 'checksum', 'createdAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'ownerId', 'label', 'ordersCount', 'inventoryCount', 'totalRevenue', 'checksum', 'createdAt'
+      ]) &&
+      isValidId(data.id) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
+      data.ownerId == request.auth.uid &&
+      data.label is string && data.label.size() >= 1 && data.label.size() <= 120 &&
+      data.ordersCount is number && data.ordersCount >= 0 && data.ordersCount <= 1000000 &&
+      data.inventoryCount is number && data.inventoryCount >= 0 && data.inventoryCount <= 1000000 &&
+      data.totalRevenue is number && data.totalRevenue >= 0 && data.totalRevenue <= 100000000000 &&
+      data.checksum is string && data.checksum.size() >= 6 && data.checksum.size() <= 64 &&
+      data.createdAt is string && data.createdAt.size() >= 10 && data.createdAt.size() <= 40;
+    }
+
+    // Validation Blueprint: PosSyncState
+    function isValidPosSyncState(data) {
+      return data.keys().hasAll([
+        'id', 'revision', 'updatedByClientId', 'actionLabel',
+        'selectedTable', 'selectedChannel', 'customerNameInput',
+        'storeName', 'storeAddress', 'storePhone', 'storeTaxCode',
+        'bankId', 'accountNo', 'accountName', 'transferPrefix', 'qrTemplate', 'qrApiUrlTemplate',
+        'products', 'inventory', 'orders', 'cart', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'id', 'revision', 'updatedByClientId', 'actionLabel',
+        'selectedTable', 'selectedChannel', 'customerNameInput',
+        'storeName', 'storeAddress', 'storePhone', 'storeTaxCode',
+        'bankId', 'accountNo', 'accountName', 'transferPrefix', 'qrTemplate', 'qrApiUrlTemplate',
+        'products', 'inventory', 'orders', 'cart', 'updatedAt'
+      ]) &&
+      data.id == 'kaffeos_live_store' &&
+      data.revision is number && data.revision >= 1 && data.revision <= 9000000000000000 &&
+      data.updatedByClientId is string && data.updatedByClientId.size() >= 1 && data.updatedByClientId.size() <= 80 &&
+      data.actionLabel is string && data.actionLabel.size() <= 240 &&
+      data.selectedTable is string && data.selectedTable.size() >= 1 && data.selectedTable.size() <= 60 &&
+      data.selectedChannel is string && data.selectedChannel.size() <= 20 &&
+      data.selectedChannel in ['dine_in', 'takeaway', 'grabfood', 'shopeefood', 'web'] &&
+      data.customerNameInput is string && data.customerNameInput.size() <= 120 &&
+      data.storeName is string && data.storeName.size() >= 1 && data.storeName.size() <= 120 &&
+      data.storeAddress is string && data.storeAddress.size() >= 1 && data.storeAddress.size() <= 200 &&
+      data.storePhone is string && data.storePhone.size() <= 60 &&
+      data.storeTaxCode is string && data.storeTaxCode.size() <= 60 &&
+      data.bankId is string && data.bankId.size() >= 1 && data.bankId.size() <= 40 &&
+      data.accountNo is string && data.accountNo.size() >= 1 && data.accountNo.size() <= 60 &&
+      data.accountName is string && data.accountName.size() >= 1 && data.accountName.size() <= 120 &&
+      data.transferPrefix is string && data.transferPrefix.size() <= 40 &&
+      data.qrTemplate is string && data.qrTemplate.size() >= 1 && data.qrTemplate.size() <= 30 &&
+      data.qrApiUrlTemplate is string && data.qrApiUrlTemplate.size() >= 10 && data.qrApiUrlTemplate.size() <= 500 &&
+      data.products is list && data.products.size() <= 100 && (data.products.size() == 0 || data.products[0] is map) &&
+      data.inventory is list && data.inventory.size() <= 100 && (data.inventory.size() == 0 || data.inventory[0] is map) &&
+      data.orders is list && data.orders.size() <= 100 && (data.orders.size() == 0 || data.orders[0] is map) &&
+      data.cart is list && data.cart.size() <= 50 && (data.cart.size() == 0 || data.cart[0] is map) &&
+      data.updatedAt is string && data.updatedAt.size() >= 10 && data.updatedAt.size() <= 40;
+    }
+
+    match /admins/{adminId} {
+      allow get: if isVerifiedUser() && isValidId(adminId) && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+
+    match /pos_sync/{syncId} {
+      allow get: if isValidId(syncId) && syncId == 'kaffeos_live_store';
+      allow list: if false;
+      allow create: if isValidId(syncId) && syncId == 'kaffeos_live_store' && isValidPosSyncState(incoming());
+      allow update: if isValidId(syncId) && syncId == 'kaffeos_live_store' && isValidPosSyncState(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'revision', 'updatedByClientId', 'actionLabel',
+          'selectedTable', 'selectedChannel', 'customerNameInput',
+          'storeName', 'storeAddress', 'storePhone', 'storeTaxCode',
+          'bankId', 'accountNo', 'accountName', 'transferPrefix', 'qrTemplate', 'qrApiUrlTemplate',
+          'products', 'inventory', 'orders', 'cart', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow get: if isVerifiedUser() && isValidId(productId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(productId) && incoming().id == productId && isValidProduct(incoming());
+      allow update: if isVerifiedUser() && isValidId(productId) && isValidProduct(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt && (
+          isAdmin() ||
+          (existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'price', 'cost', 'barcode', 'sku', 'available', 'updatedAt']))
+        );
+      allow delete: if isVerifiedUser() && isValidId(productId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    match /inventory/{itemId} {
+      allow get: if isVerifiedUser() && isValidId(itemId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(itemId) && incoming().id == itemId && isValidInventoryItem(incoming());
+      allow update: if isVerifiedUser() && isValidId(itemId) && isValidInventoryItem(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().ownerId == existing().ownerId && (
+          isAdmin() ||
+          // Action 1: Stock deduction or restock
+          (existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'minThreshold', 'costPerUnit', 'updatedAt'])) ||
+          // Action 2: Metadata update
+          (existing().ownerId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'sku', 'unit', 'supplier', 'quantity', 'minThreshold', 'costPerUnit', 'updatedAt']))
+        );
+      allow delete: if isVerifiedUser() && isValidId(itemId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+
+    match /orders/{orderId} {
+      allow get: if isVerifiedUser() && isValidId(orderId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(orderId) && incoming().id == orderId && isValidPosOrder(incoming());
+      allow update: if isVerifiedUser() && isValidId(orderId) && isValidPosOrder(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt && (
+          isAdmin() ||
+          (existing().ownerId == request.auth.uid &&
+            existing().status != 'completed' &&
+            existing().status != 'cancelled' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+        );
+      allow delete: if isVerifiedUser() && isValidId(orderId) && isAdmin();
+    }
+
+    match /backups/{backupId} {
+      allow get: if isVerifiedUser() && isValidId(backupId) && (existing().ownerId == request.auth.uid || isAdmin());
+      allow list: if isVerifiedUser() && existing().ownerId == request.auth.uid;
+      allow create: if isVerifiedUser() && isValidId(backupId) && incoming().id == backupId && isValidCloudBackup(incoming());
+      allow update: if false;
+      allow delete: if isVerifiedUser() && isValidId(backupId) && (existing().ownerId == request.auth.uid || isAdmin());
+    }
+  }
+}

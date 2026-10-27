@@ -1,0 +1,6 @@
+{
+  "name": "KaffeOS — POS & Quản Trị Quán Cafe Thông Minh",
+  "description": "Phần mềm POS Cafe đa nền tảng hỗ trợ cảm ứng, quản lý kho tự động, thanh toán QR/Ví điện tử, hóa đơn điện tử, đồng bộ đám mây thời gian thực, hoạt động ngoại tuyến, phân quyền nhân sự và AI dự báo doanh thu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

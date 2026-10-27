@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Menu item sold at the cafe POS with barcode and stock tracking.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "category": { "type": "string", "enum": ["coffee", "tea", "freeze", "bakery", "beans"] },
+        "price": { "type": "number" },
+        "cost": { "type": "number" },
+        "barcode": { "type": "string", "minLength": 4, "maxLength": 32, "pattern": "^[0-9A-Z\\-]+$" },
+        "sku": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "available": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "name", "category", "price", "cost", "barcode", "sku", "available", "createdAt", "updatedAt"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Raw ingredient or stock item managed in the cafe warehouse.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "sku": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "unit": { "type": "string", "minLength": 1, "maxLength": 24 },
+        "quantity": { "type": "number" },
+        "minThreshold": { "type": "number" },
+        "costPerUnit": { "type": "number" },
+        "supplier": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "name", "sku", "unit", "quantity", "minThreshold", "costPerUnit", "supplier", "updatedAt"]
+    },
+    "PosOrder": {
+      "title": "PosOrder",
+      "description": "Completed or active customer order synchronized across POS devices.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "orderCode": { "type": "string", "minLength": 3, "maxLength": 32 },
+        "channel": { "type": "string", "enum": ["dine_in", "takeaway", "grabfood", "shopeefood", "web"] },
+        "tableName": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "tax": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "vietqr", "momo", "vnpay", "zalopay", "card"] },
+        "status": { "type": "string", "enum": ["preparing", "ready", "completed", "cancelled"] },
+        "cashierName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "customerName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "itemSummary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "itemCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "orderCode", "channel", "tableName", "subtotal", "discount", "tax", "total", "paymentMethod", "status", "cashierName", "customerName", "itemSummary", "itemCount", "createdAt", "updatedAt"]
+    },
+    "CloudBackup": {
+      "title": "CloudBackup",
+      "description": "Encrypted cloud backup snapshot metadata for store state recovery.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "ordersCount": { "type": "number" },
+        "inventoryCount": { "type": "number" },
+        "totalRevenue": { "type": "number" },
+        "checksum": { "type": "string", "minLength": 6, "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerId", "label", "ordersCount", "inventoryCount", "totalRevenue", "checksum", "createdAt"]
+    },
+    "PosSyncState": {
+      "title": "PosSyncState",
+      "description": "Real-time cross-device store synchronization state including menu, inventory, orders, active cart, customer name, store profile, and bank QR API settings.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "revision": { "type": "number" },
+        "updatedByClientId": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "actionLabel": { "type": "string", "maxLength": 240 },
+        "selectedTable": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "selectedChannel": { "type": "string", "enum": ["dine_in", "takeaway", "grabfood", "shopeefood", "web"] },
+        "customerNameInput": { "type": "string", "maxLength": 120 },
+        "storeName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "storeAddress": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "storePhone": { "type": "string", "maxLength": 60 },
+        "storeTaxCode": { "type": "string", "maxLength": 60 },
+        "bankId": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "accountNo": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "accountName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "transferPrefix": { "type": "string", "maxLength": 40 },
+        "qrTemplate": { "type": "string", "minLength": 1, "maxLength": 30 },
+        "qrApiUrlTemplate": { "type": "string", "minLength": 10, "maxLength": 500 },
+        "products": { "type": "array" },
+        "inventory": { "type": "array" },
+        "orders": { "type": "array" },
+        "cart": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id", "revision", "updatedByClientId", "actionLabel",
+        "selectedTable", "selectedChannel", "customerNameInput",
+        "storeName", "storeAddress", "storePhone", "storeTaxCode",
+        "bankId", "accountNo", "accountName", "transferPrefix", "qrTemplate", "qrApiUrlTemplate",
+        "products", "inventory", "orders", "cart", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store menu products synced across terminals."
+    },
+    "/inventory/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "Store warehouse inventory items with real-time stock quantities."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/PosOrder" },
+      "description": "Real-time POS orders synced across cashier, kitchen, and manager devices."
+    },
+    "/backups/{backupId}": {
+      "schema": { "$ref": "#/entities/CloudBackup" },
+      "description": "Cloud backup checkpoints created automatically or manually."
+    },
+    "/pos_sync/{syncId}": {
+      "schema": { "$ref": "#/entities/PosSyncState" },
+      "description": "Real-time cross-device POS synchronization document."
+    }
+  }
+}
